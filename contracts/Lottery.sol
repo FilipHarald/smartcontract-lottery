@@ -18,15 +18,14 @@ contract Lottery is VRFConsumerBase, Ownable {
     CALCULATING_WINNER
   }
   LOTTERY_STATE public lottery_state;
-  uint256 public randomessFee;
+  uint256 public randomnessFee;
   bytes32 public keyhash;
-  event RequestedRandomness(bytes32 requestId);
 
   constructor(
     address _priceFeedAddress,
     address _vrfCoordinator,
     address _link,
-    uint256 _randomessFee,
+    uint256 _randomnessFee,
     bytes32 _keyhash
   )
   public
@@ -37,7 +36,7 @@ contract Lottery is VRFConsumerBase, Ownable {
     usdEntryFee = 50 * (10**18);
     ethUsdPriceFeed = AggregatorV3Interface(_priceFeedAddress);
     lottery_state = LOTTERY_STATE.CLOSED;
-    randomessFee = _randomessFee;
+    randomnessFee = _randomnessFee;
     keyhash = _keyhash;
   }
 
@@ -61,15 +60,16 @@ contract Lottery is VRFConsumerBase, Ownable {
 
   function endLottery() public onlyOwner {
     require(lottery_state == LOTTERY_STATE.OPEN, "Cant stop lottery at the moment!");
+    require((LINK.balanceOf(address(this)) >= randomnessFee), "Not enough LINK - fill contract with faucet");
     lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
-    bytes32 requestId = requestRandomness(keyhash, randomessFee);
-    emit RequestedRandomness(requestId);
+    bytes32 requestId = requestRandomness(keyhash, randomnessFee);
   }
 
   function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
     require(lottery_state == LOTTERY_STATE.CALCULATING_WINNER, "You arnt there yet!");
     require(_randomness > 0, "random-not-found");
-    recentWinner = players[_randomness % players.length];
+    uint256 winnerAddress = _randomness % players.length;
+    recentWinner = players[winnerAddress];
     recentWinner.transfer(address(this).balance);
     players = new address payable [](0);
     lottery_state = LOTTERY_STATE.CLOSED;

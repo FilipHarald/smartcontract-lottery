@@ -3,14 +3,13 @@ from scripts.helpful_scripts import LOCAL_BLOCKCHAIN_ENVIRONMENTS, get_account, 
 from scripts.deploy_lottery import deploy_lottery
 from web3 import Web3
 import pytest
-import time
 
-def skip_local():
+def skip_not_local():
     if network.show_active() not in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
         pytest.skip()
 
 def test_get_entrance_fee():
-    skip_local()
+    skip_not_local()
     # Arrange
     lottery = deploy_lottery()
     # Act
@@ -19,7 +18,7 @@ def test_get_entrance_fee():
     assert expected_entrance_fee ==  Web3.toWei(0.025, "ether")
 
 def test_cant_enter_if_not_started():
-    skip_local()
+    skip_not_local()
     # Arrange
     account = get_account()
     lottery = deploy_lottery()
@@ -28,7 +27,7 @@ def test_cant_enter_if_not_started():
         lottery.enter({"from": account, "value": lottery.getEntranceFee()})
 
 def test_can_start_and_enter_lottery():
-    skip_local()
+    skip_not_local()
     # Arrange
     account = get_account()
     lottery = deploy_lottery()
@@ -39,7 +38,7 @@ def test_can_start_and_enter_lottery():
     assert lottery.players(0) == account
 
 def test_can_end_lottery():
-    skip_local()
+    skip_not_local()
     # Arrange
     account = get_account()
     lottery = deploy_lottery()
@@ -52,7 +51,7 @@ def test_can_end_lottery():
     assert lottery.lottery_state() == 2
 
 def test_can_pick_winner_correctly():
-    skip_local()
+    skip_not_local()
     # Arrange
     account = get_account()
     lottery = deploy_lottery()
