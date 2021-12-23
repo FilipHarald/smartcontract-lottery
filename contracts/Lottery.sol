@@ -20,6 +20,7 @@ contract Lottery is VRFConsumerBase, Ownable {
   LOTTERY_STATE public lottery_state;
   uint256 public randomessFee;
   bytes32 public keyhash;
+  event RequestedRandomness(bytes32 requestId);
 
   constructor(
     address _priceFeedAddress,
@@ -61,7 +62,8 @@ contract Lottery is VRFConsumerBase, Ownable {
   function endLottery() public onlyOwner {
     require(lottery_state == LOTTERY_STATE.OPEN, "Cant stop lottery at the moment!");
     lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
-    requestRandomness(keyhash, randomessFee);
+    bytes32 requestId = requestRandomness(keyhash, randomessFee);
+    emit RequestedRandomness(requestId);
   }
 
   function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override {
